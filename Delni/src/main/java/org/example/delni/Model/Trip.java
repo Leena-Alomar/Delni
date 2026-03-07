@@ -21,7 +21,7 @@ public class Trip {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(columnDefinition = "VARCHAR(50) NOT NULL")
+    @Column(columnDefinition = "VARCHAR(100) NOT NULL")
     @NotEmpty(message = "Title cannot be empty")
     @Size(min = 4, max = 50, message = "Title must be between 4 and 50 characters")
     private String title;
@@ -46,8 +46,8 @@ public class Trip {
     private Integer groupSize;
 
     @NotEmpty(message = "Trip type is required")
-    @Pattern(regexp = "Family|Friends|Solo",
-            message = "Trip type must be Family, Friends, or Solo")
+    @Pattern(regexp = "Family|Friends|Solo|Couple",
+            message = "Trip type must be Family, Friends, Solo, or Couple")
     private String tripType;
 
     @NotEmpty(message = "Budget tier is required")
@@ -58,12 +58,17 @@ public class Trip {
     @PositiveOrZero(message = "Total cost cannot be negative")
     private Double totalCostEstimate;
 
-    private Boolean includeTikTok;
+    // Feature Flags - Matching ERD
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean includeTikTokTrending;
 
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean weatherAware;
 
-    private Boolean includePrayerBreak;
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean includePrayerSchedule;
 
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean includeTopRatings;
 
     @Column(columnDefinition = "TEXT")
@@ -72,7 +77,7 @@ public class Trip {
     @Column(columnDefinition = "TEXT")
     private String aiItineraryLogic;
 
-    @CreationTimestamp
+    @Column(columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
     // Relationships
@@ -85,4 +90,6 @@ public class Trip {
     @JsonIgnore
     private City city;
 
+//    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL)
+//    private List<TripPlace> tripPlaces;
 }

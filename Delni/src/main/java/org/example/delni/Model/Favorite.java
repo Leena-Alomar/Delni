@@ -18,11 +18,18 @@ public class Favorite {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(columnDefinition = "TIMESTAMP NOT NULL")
-    private LocalDateTime createdAt;
+    @Column(insertable = false, updatable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime savedAt;
 
     // Relationships
-    private Integer userId;
 
-    private Integer placeId;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+//    @ManyToOne
+//    @JoinColumn(name = "place_id", nullable = false)
+//    private Place place;
+
 }

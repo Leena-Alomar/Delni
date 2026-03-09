@@ -6,10 +6,9 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -90,6 +89,6 @@ public class Trip {
     @JsonIgnore
     private City city;
 
-//    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL)
-//    private List<TripPlace> tripPlaces;
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL)
+    private List<TripPlace> tripPlaces;
 }

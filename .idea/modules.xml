@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/Delni/Delni.iml" filepath="$PROJECT_DIR$/Delni/Delni.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/dullani.iml" filepath="$PROJECT_DIR$/.idea/dullani.iml" />
     </modules>
   </component>

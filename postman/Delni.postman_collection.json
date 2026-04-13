@@ -1,0 +1,546 @@
+{
+  "info": {
+    "_postman_id": "d43d1bcc-7ef6-4e74-a5c5-7f70a7e38a12",
+    "name": "Delni API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Happy-path Postman collection for testing the Delni backend."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "cityId",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "place1Id",
+      "value": ""
+    },
+    {
+      "key": "place2Id",
+      "value": ""
+    },
+    {
+      "key": "place3Id",
+      "value": ""
+    },
+    {
+      "key": "place4Id",
+      "value": ""
+    },
+    {
+      "key": "place5Id",
+      "value": ""
+    },
+    {
+      "key": "tripId",
+      "value": ""
+    },
+    {
+      "key": "tripPlaceId",
+      "value": ""
+    },
+    {
+      "key": "selectedPlaceId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Create City",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Riyadh\",\n  \"region\": \"Riyadh Region\",\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753,\n  \"description\": \"Seed city for Postman testing\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/cities",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "cities"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('City created', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set('cityId', data.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Create User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"سارة\",\n  \"lastName\": \"أحمد\",\n  \"username\": \"sara_trip_test\",\n  \"email\": \"sara.trip.test@example.com\",\n  \"password\": \"Strong@123\",\n  \"phoneNumber\": \"966512345678\",\n  \"interestTags\": \"coffee,history,nature\",\n  \"aiPreferenceSummary\": \"Family-friendly places with variety\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('User created', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set('userId', data.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Create Place 1 - Cafe",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Bateel Cafe\",\n  \"description\": \"Coffee and breakfast stop for the morning.\",\n  \"category\": \"cafe\",\n  \"vibeTag\": \"modern\",\n  \"latitude\": 24.7262,\n  \"longitude\": 46.6385,\n  \"googleRating\": 4.8,\n  \"googleMapsUrl\": \"https://maps.google.com/?q=24.7262,46.6385\",\n  \"tiktokTrendScore\": 28.0,\n  \"isTrending\": true,\n  \"imageUrl\": \"https://images.unsplash.com/photo-1509042239860-f550ce710b93\",\n  \"tiktokVideoUrl\": \"https://www.tiktok.com/@dalni/video/123456789\",\n  \"trendReason\": \"Popular breakfast recommendation across Riyadh food videos.\",\n  \"operatingHours\": [\n    {\n      \"dayOfWeek\": 0,\n      \"openTime\": \"08:00:00\",\n      \"closeTime\": \"23:00:00\",\n      \"isSplitShift\": false,\n      \"prayerBreak\": false,\n      \"notes\": \"Open all day\"\n    },\n    {\n      \"dayOfWeek\": 1,\n      \"openTime\": \"08:00:00\",\n      \"closeTime\": \"23:00:00\",\n      \"isSplitShift\": false,\n      \"prayerBreak\": true,\n      \"notes\": \"Short prayer pause possible\"\n    }\n  ],\n  \"mediaList\": [\n    {\n      \"mediaType\": \"image\",\n      \"url\": \"https://images.unsplash.com/photo-1445116572660-236099ec97a0\",\n      \"thumbnail\": \"https://images.unsplash.com/photo-1445116572660-236099ec97a0\",\n      \"caption\": \"Cafe interior\"\n    }\n  ],\n  \"city\": {\n    \"id\": {{cityId}}\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/places",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "places"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set('place1Id', data.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Create Place 2 - History",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Diriyah Walk\",\n  \"description\": \"Historic district visit with traditional architecture.\",\n  \"category\": \"history\",\n  \"vibeTag\": \"historical\",\n  \"latitude\": 24.7369,\n  \"longitude\": 46.5710,\n  \"googleRating\": 4.9,\n  \"googleMapsUrl\": \"https://maps.google.com/?q=24.7369,46.5710\",\n  \"tiktokTrendScore\": 22.0,\n  \"isTrending\": true,\n  \"imageUrl\": \"https://images.unsplash.com/photo-1512453979798-5ea266f8880c\",\n  \"city\": {\n    \"id\": {{cityId}}\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/places",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "places"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set('place2Id', data.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Create Place 3 - Nature",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Wadi Hanifah Park\",\n  \"description\": \"Outdoor family-friendly nature stop.\",\n  \"category\": \"nature\",\n  \"vibeTag\": \"nature\",\n  \"latitude\": 24.6086,\n  \"longitude\": 46.5895,\n  \"googleRating\": 4.6,\n  \"googleMapsUrl\": \"https://maps.google.com/?q=24.6086,46.5895\",\n  \"tiktokTrendScore\": 14.0,\n  \"isTrending\": false,\n  \"imageUrl\": \"https://images.unsplash.com/photo-1501785888041-af3ef285b470\",\n  \"city\": {\n    \"id\": {{cityId}}\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/places",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "places"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set('place3Id', data.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Create Place 4 - Entertainment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Boulevard World\",\n  \"description\": \"Entertainment destination with family activities.\",\n  \"category\": \"entertainment\",\n  \"vibeTag\": \"modern\",\n  \"latitude\": 24.7684,\n  \"longitude\": 46.6049,\n  \"googleRating\": 4.7,\n  \"googleMapsUrl\": \"https://maps.google.com/?q=24.7684,46.6049\",\n  \"tiktokTrendScore\": 30.0,\n  \"isTrending\": true,\n  \"imageUrl\": \"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee\",\n  \"city\": {\n    \"id\": {{cityId}}\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/places",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "places"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set('place4Id', data.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Create Place 5 - Restaurant",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Najd Village\",\n  \"description\": \"Traditional restaurant for dinner.\",\n  \"category\": \"restaurant\",\n  \"vibeTag\": \"historical\",\n  \"latitude\": 24.6877,\n  \"longitude\": 46.6851,\n  \"googleRating\": 4.5,\n  \"googleMapsUrl\": \"https://maps.google.com/?q=24.6877,46.6851\",\n  \"tiktokTrendScore\": 18.0,\n  \"isTrending\": false,\n  \"imageUrl\": \"https://images.unsplash.com/photo-1517248135467-4c7edcad34c4\",\n  \"city\": {\n    \"id\": {{cityId}}\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/places",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "places"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set('place5Id', data.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Generate Trip",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Riyadh Family Escape\",\n  \"startDate\": \"2026-04-15\",\n  \"endDate\": \"2026-04-16\",\n  \"groupSize\": 4,\n  \"tripType\": \"Family\",\n  \"budgetTier\": \"Medium\",\n  \"totalCostEstimate\": 1500,\n  \"includeTikTokTrending\": false,\n  \"weatherAware\": true,\n  \"includePrayerSchedule\": true,\n  \"includeTopRatings\": true,\n  \"userPrompt\": \"Family-friendly places with coffee, culture, and a good dinner stop.\",\n  \"userId\": {{userId}},\n  \"cityId\": {{cityId}}\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/trips/generate",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "trips",
+            "generate"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Trip generated', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set('tripId', data.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Get Trip Itinerary",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/trips/{{tripId}}/itinerary",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "trips",
+            "{{tripId}}",
+            "itinerary"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Itinerary fetched', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "const firstStop = data.days?.[0]?.blocks?.[0]?.places?.[0];",
+              "if (firstStop) {",
+              "  pm.collectionVariables.set('tripPlaceId', firstStop.tripPlaceId);",
+              "  pm.collectionVariables.set('selectedPlaceId', firstStop.placeId);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Get Place Details",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/places/{{selectedPlaceId}}/details",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "places",
+            "{{selectedPlaceId}}",
+            "details"
+          ]
+        }
+      }
+    },
+    {
+      "name": "11. Save Favorite",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/api/favorites?userId={{userId}}&placeId={{selectedPlaceId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "favorites"
+          ],
+          "query": [
+            {
+              "key": "userId",
+              "value": "{{userId}}"
+            },
+            {
+              "key": "placeId",
+              "value": "{{selectedPlaceId}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "12. Get Favorite Places",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/favorites/user/{{userId}}/places",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "favorites",
+            "user",
+            "{{userId}}",
+            "places"
+          ]
+        }
+      }
+    },
+    {
+      "name": "13. Replace First Itinerary Stop",
+      "request": {
+        "method": "PUT",
+        "url": {
+          "raw": "{{baseUrl}}/api/trips/{{tripId}}/places/{{tripPlaceId}}/replace",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "trips",
+            "{{tripId}}",
+            "places",
+            "{{tripPlaceId}}",
+            "replace"
+          ]
+        }
+      }
+    },
+    {
+      "name": "14. List Places By City",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/places?cityId={{cityId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "places"
+          ],
+          "query": [
+            {
+              "key": "cityId",
+              "value": "{{cityId}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "15. Get Top Places",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/places/top",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "places",
+            "top"
+          ]
+        }
+      }
+    },
+    {
+      "name": "16. Get Trending Places",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/places/trending",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "places",
+            "trending"
+          ]
+        }
+      }
+    }
+  ]
+}

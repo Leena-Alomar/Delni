@@ -1,28 +1,27 @@
 package org.example.delni.Controller;
 
-import org.example.delni.Model.Place;
-import org.example.delni.Repository.PlaceRepository;
+import lombok.RequiredArgsConstructor;
+import org.example.delni.DTO.Out.TrendRefreshResponse;
 import org.example.delni.Service.TikTokService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/trends")
+@RequiredArgsConstructor
 public class TrendController {
 
-    @Autowired
-    private TikTokService tikTokService;
+    private final TikTokService tikTokService;
 
-    @Autowired
-    private PlaceRepository placeRepository;
+    @PostMapping("/update")
+    public ResponseEntity<?> updateTrends(@RequestParam(required = false) Integer placeId) {
+        if (placeId != null) {
+            return ResponseEntity.status(200).body(tikTokService.updateTrendForPlace(placeId));
+        }
 
-    @GetMapping("/update")
-    public List<Place> updateTrends() {
-
-        tikTokService.updateAllTrends();
-
-        return placeRepository.findAll();
+        return ResponseEntity.status(200).body(tikTokService.updateAllTrends());
     }
 }

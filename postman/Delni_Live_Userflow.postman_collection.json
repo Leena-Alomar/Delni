@@ -1,0 +1,834 @@
+{
+  "info": {
+    "_postman_id": "b3a6d6a9-bf47-4b53-8d3d-0b0b3b5a8f25",
+    "name": "Delni Live User Flow",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "# Delni Live User Flow\n\nImport this collection into Postman to test the backend in the same order a real user would use the app.\n\n## Story\nSara signs up, the app imports live Riyadh places from Google Maps, loads the explore/home payload, refreshes TikTok trend scores, generates a weather-aware and prayer-aware trip, opens place details, saves a favorite, and replaces one itinerary stop.\n\n## Prerequisites\n- Start the backend from IntelliJ\n- Make sure MySQL is running\n- The IntelliJ run configuration must include `GOOGLE_MAPS_API_KEY` and `RAPIDAPI_KEY`\n- Add `OPENAI_API_KEY` as well if you want the new AI-assisted TikTok search flow\n- Weather and prayer use the configured public APIs automatically\n\n## Recommended Run Order\n1. Setup -> Create Riyadh City\n2. Setup -> Create User\n3. Live Catalog -> Sync Google places and load Explore Home\n4. Live Catalog -> Refresh TikTok trends for all places, then for one selected place\n5. Trip Experience -> Generate Smart Trip\n6. Trip Experience -> Open itinerary, details, favorites, and replace a stop\n\n## Notes\n- The collection stores IDs automatically in collection variables.\n- The trip request uses future dates generated automatically in a pre-request script.\n- The main trip request keeps `includeTikTokTrending=false` so the flow still succeeds even if no synced places become trending. TikTok still affects scoring when data exists.\n- Without `OPENAI_API_KEY`, TikTok search falls back to heuristic keyword generation.\n- Use the single-place trend request when you want to inspect the AI search prompt, attempted keywords, matched keyword, and media previews for one place."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "cityId",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "tripId",
+      "value": ""
+    },
+    {
+      "key": "placeId",
+      "value": ""
+    },
+    {
+      "key": "tripPlaceId",
+      "value": ""
+    },
+    {
+      "key": "runSuffix",
+      "value": ""
+    },
+    {
+      "key": "startDate",
+      "value": ""
+    },
+    {
+      "key": "endDate",
+      "value": ""
+    },
+    {
+      "key": "importedPlaceId",
+      "value": ""
+    },
+    {
+      "key": "trendingPlaceId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Setup",
+      "description": "Create the base city and a fresh user for this run. The user request auto-generates unique username, email, and phone values so you can rerun the collection without uniqueness collisions.",
+      "item": [
+        {
+          "name": "1.1 Create Riyadh City",
+          "request": {
+            "method": "POST",
+            "description": "Creates the city used by the rest of the flow.\n\nSuccess checks:\n- HTTP 200\n- Response returns an `id`\n- Collection variable `cityId` is saved",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Riyadh\",\n  \"region\": \"Riyadh\",\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753,\n  \"description\": \"Capital city for Delni live integration testing\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cities"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('City created', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('cityId', data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.2 Create User",
+          "request": {
+            "method": "POST",
+            "description": "Simulates the signup step from the app flow.\n\nThis request generates unique user identity values using `runSuffix`.\n\nSuccess checks:\n- HTTP 200\n- Response returns an `id`\n- Collection variable `userId` is saved",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Sara\",\n  \"lastName\": \"Alharbi\",\n  \"username\": \"sara_{{runSuffix}}\",\n  \"email\": \"sara.{{runSuffix}}@example.com\",\n  \"password\": \"Strong@123\",\n  \"phoneNumber\": \"9665{{runSuffix}}\",\n  \"interestTags\": \"coffee,culture,shopping,restaurants\",\n  \"aiPreferenceSummary\": \"I like trendy places, highly rated spots, and organized plans around prayer time.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const suffix = String(Date.now()).slice(-8);",
+                  "pm.collectionVariables.set('runSuffix', suffix);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('User created', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('userId', data.id);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Live Catalog",
+      "description": "Import live Google places, then refresh TikTok trend scores. This is the closest backend equivalent to the home/explore data feed in the video flow.",
+      "item": [
+        {
+          "name": "2.1 Sync Google Cafes",
+          "request": {
+            "method": "POST",
+            "description": "Imports nearby cafes from Google Maps and links them to `cityId`.\n\nRequired params:\n- `lat`\n- `lng`\n- `type`\n- `cityId`\n\nSuccess checks:\n- HTTP 200\n- Response includes import summary fields\n- First imported place card is saved to `placeId` if available",
+            "url": {
+              "raw": "{{baseUrl}}/api/maps/sync-places?lat=24.7136&lng=46.6753&type=cafe&cityId={{cityId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "maps",
+                "sync-places"
+              ],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "24.7136"
+                },
+                {
+                  "key": "lng",
+                  "value": "46.6753"
+                },
+                {
+                  "key": "type",
+                  "value": "cafe"
+                },
+                {
+                  "key": "cityId",
+                  "value": "{{cityId}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cafe sync succeeded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const data = pm.response.json();",
+                  "pm.test('Cafe sync returned a summary object', function () {",
+                  "  pm.expect(data).to.have.property('places');",
+                  "  pm.expect(Array.isArray(data.places)).to.eql(true);",
+                  "});",
+                  "if (Array.isArray(data.places) && data.places.length > 0) {",
+                  "  pm.collectionVariables.set('importedPlaceId', data.places[0].id);",
+                  "  pm.collectionVariables.set('placeId', data.places[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.2 Sync Google Restaurants",
+          "request": {
+            "method": "POST",
+            "description": "Imports nearby restaurants from Google Maps for the same city.",
+            "url": {
+              "raw": "{{baseUrl}}/api/maps/sync-places?lat=24.7136&lng=46.6753&type=restaurant&cityId={{cityId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "maps",
+                "sync-places"
+              ],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "24.7136"
+                },
+                {
+                  "key": "lng",
+                  "value": "46.6753"
+                },
+                {
+                  "key": "type",
+                  "value": "restaurant"
+                },
+                {
+                  "key": "cityId",
+                  "value": "{{cityId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.3 Sync Google Attractions",
+          "request": {
+            "method": "POST",
+            "description": "Imports nearby tourist attractions from Google Maps for the same city.",
+            "url": {
+              "raw": "{{baseUrl}}/api/maps/sync-places?lat=24.7136&lng=46.6753&type=tourist_attraction&cityId={{cityId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "maps",
+                "sync-places"
+              ],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "24.7136"
+                },
+                {
+                  "key": "lng",
+                  "value": "46.6753"
+                },
+                {
+                  "key": "type",
+                  "value": "tourist_attraction"
+                },
+                {
+                  "key": "cityId",
+                  "value": "{{cityId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.4 List Imported Places",
+          "request": {
+            "method": "POST",
+            "description": "Shows the live place catalog after Google import.\n\nSuccess checks:\n- HTTP 200\n- Response array is not empty\n- First place is saved to `placeId` if no place has been saved yet",
+            "url": {
+              "raw": "{{baseUrl}}/api/places?cityId={{cityId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "places"
+              ],
+              "query": [
+                {
+                  "key": "cityId",
+                  "value": "{{cityId}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Place list loaded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const data = pm.response.json();",
+                  "pm.test('Imported places exist', function () {",
+                  "  pm.expect(Array.isArray(data)).to.eql(true);",
+                  "  pm.expect(data.length).to.be.above(0);",
+                  "});",
+                  "if (Array.isArray(data) && data.length > 0) {",
+                  "  pm.collectionVariables.set('placeId', data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.5 Load Explore Home",
+          "request": {
+            "method": "POST",
+            "description": "Loads the explore/home payload used by the app landing screen.\n\nSuccess checks:\n- HTTP 200\n- Response includes hero text and curated place arrays\n- `placeId` is updated from the first featured place when available",
+            "url": {
+              "raw": "{{baseUrl}}/api/explore/home?cityId={{cityId}}&userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "explore",
+                "home"
+              ],
+              "query": [
+                {
+                  "key": "cityId",
+                  "value": "{{cityId}}"
+                },
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Explore home loaded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const data = pm.response.json();",
+                  "pm.test('Explore response includes curated arrays', function () {",
+                  "  pm.expect(data).to.have.property('featuredPlaces');",
+                  "  pm.expect(data).to.have.property('topRatedPlaces');",
+                  "  pm.expect(Array.isArray(data.featuredPlaces)).to.eql(true);",
+                  "});",
+                  "const featured = data.featuredPlaces?.[0];",
+                  "if (featured && featured.id) {",
+                  "  pm.collectionVariables.set('placeId', featured.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.6 Update All TikTok Trends",
+          "request": {
+            "method": "GET",
+            "description": "Refreshes TikTok trend scores for all saved places using the configured RapidAPI key.\n\nSuccess checks:\n- HTTP 200\n- Response returns summary counts and per-place trend results\n- If any place becomes trending, its id is saved to `trendingPlaceId`",
+            "url": {
+              "raw": "{{baseUrl}}/api/trends/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "trends",
+                "update"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Trend refresh completed', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const data = pm.response.json();",
+                  "pm.test('Trend refresh returned summary data', function () {",
+                  "  pm.expect(data).to.have.property('status');",
+                  "  pm.expect(data).to.have.property('places');",
+                  "  pm.expect(Array.isArray(data.places)).to.eql(true);",
+                  "});",
+                  "const trending = data.places?.find(place => place.trending === true);",
+                  "if (trending && trending.placeId) {",
+                  "  pm.collectionVariables.set('trendingPlaceId', trending.placeId);",
+                  "  pm.collectionVariables.set('placeId', trending.placeId);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.7 Refresh Selected Place Trend",
+          "request": {
+            "method": "GET",
+            "description": "Refreshes TikTok trend data for one selected place.\n\nUse this to inspect the AI-guided search strategy for a specific place from the explore catalog.\n\nSuccess checks:\n- HTTP 200\n- Response contains one place result\n- Response exposes attempted keywords, search prompt, and media previews",
+            "url": {
+              "raw": "{{baseUrl}}/api/trends/update?placeId={{placeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "trends",
+                "update"
+              ],
+              "query": [
+                {
+                  "key": "placeId",
+                  "value": "{{placeId}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Selected place trend refresh completed', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const data = pm.response.json();",
+                  "pm.test('Selected trend response has one result', function () {",
+                  "  pm.expect(Array.isArray(data.places)).to.eql(true);",
+                  "  pm.expect(data.places.length).to.be.above(0);",
+                  "});",
+                  "const first = data.places?.[0];",
+                  "pm.test('Selected trend response exposes AI search details', function () {",
+                  "  pm.expect(first).to.have.property('attemptedKeywords');",
+                  "  pm.expect(first).to.have.property('searchPrompt');",
+                  "  pm.expect(first).to.have.property('mediaPreviews');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.8 List Trending Places",
+          "request": {
+            "method": "GET",
+            "description": "Checks which places are marked as trending after TikTok refresh.\n\nSuccess checks:\n- HTTP 200\n- Response is an array\n\nNote:\nAn empty array can still be valid if no synced place names produced useful TikTok search results.",
+            "url": {
+              "raw": "{{baseUrl}}/api/places/trending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "places",
+                "trending"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Trending endpoint loaded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const data = pm.response.json();",
+                  "pm.test('Trending response is an array', function () {",
+                  "  pm.expect(Array.isArray(data)).to.eql(true);",
+                  "});",
+                  "if (Array.isArray(data) && data.length > 0) {",
+                  "  pm.collectionVariables.set('trendingPlaceId', data[0].id);",
+                  "  pm.collectionVariables.set('placeId', data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Trip Experience",
+      "description": "Runs the main app journey: generate a trip, inspect the itinerary, open place details, save a favorite, replace a stop, and confirm the itinerary updates.",
+      "item": [
+        {
+          "name": "3.1 Generate Smart Trip",
+          "request": {
+            "method": "POST",
+            "description": "Creates a 2-day Riyadh trip using live imported places.\n\nThis request enables weather and prayer awareness and includes top ratings. It keeps `includeTikTokTrending=false` so the trip still generates even if no place becomes trending.\n\nSuccess checks:\n- HTTP 200\n- Response returns `id`\n- Collection variable `tripId` is saved",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Sara Riyadh Weekend\",\n  \"startDate\": \"{{startDate}}\",\n  \"endDate\": \"{{endDate}}\",\n  \"groupSize\": 3,\n  \"tripType\": \"Friends\",\n  \"budgetTier\": \"Medium\",\n  \"totalCostEstimate\": 1200,\n  \"includeTikTokTrending\": false,\n  \"weatherAware\": true,\n  \"includePrayerSchedule\": true,\n  \"includeTopRatings\": true,\n  \"userPrompt\": \"I want trendy cafes, one nice dinner place, and one fun attraction with low travel time.\",\n  \"userId\": {{userId}},\n  \"cityId\": {{cityId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/trips/generate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "trips",
+                "generate"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const start = new Date();",
+                  "start.setDate(start.getDate() + 3);",
+                  "const end = new Date(start);",
+                  "end.setDate(end.getDate() + 1);",
+                  "const fmt = (value) => [",
+                  "  value.getFullYear(),",
+                  "  String(value.getMonth() + 1).padStart(2, '0'),",
+                  "  String(value.getDate()).padStart(2, '0')",
+                  "].join('-');",
+                  "pm.collectionVariables.set('startDate', fmt(start));",
+                  "pm.collectionVariables.set('endDate', fmt(end));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Trip generated', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const data = pm.response.json();",
+                  "pm.test('Trip response contains trip id', function () {",
+                  "  pm.expect(data.id).to.exist;",
+                  "});",
+                  "pm.collectionVariables.set('tripId', data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.2 Get Itinerary",
+          "request": {
+            "method": "GET",
+            "description": "Loads the frontend-ready itinerary response.\n\nSuccess checks:\n- HTTP 200\n- Response contains `days`\n- First stop is saved to `tripPlaceId` and `placeId`\n- Weather and prayer objects should be present when the APIs respond",
+            "url": {
+              "raw": "{{baseUrl}}/api/trips/{{tripId}}/itinerary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "trips",
+                "{{tripId}}",
+                "itinerary"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Itinerary loaded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const data = pm.response.json();",
+                  "pm.test('Itinerary has days', function () {",
+                  "  pm.expect(Array.isArray(data.days)).to.eql(true);",
+                  "  pm.expect(data.days.length).to.be.above(0);",
+                  "});",
+                  "const firstStop = data.days?.[0]?.blocks?.[0]?.places?.[0];",
+                  "if (firstStop) {",
+                  "  pm.collectionVariables.set('tripPlaceId', firstStop.tripPlaceId);",
+                  "  pm.collectionVariables.set('placeId', firstStop.placeId);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.3 Get Place Details",
+          "request": {
+            "method": "GET",
+            "description": "Loads the place details payload used by the detailed place screen.\n\nSuccess checks:\n- HTTP 200\n- Response includes tags, action links, and maps URL",
+            "url": {
+              "raw": "{{baseUrl}}/api/places/{{placeId}}/details",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "places",
+                "{{placeId}}",
+                "details"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Place details loaded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.4 Save Favorite",
+          "request": {
+            "method": "POST",
+            "description": "Saves the selected place for the current user.",
+            "url": {
+              "raw": "{{baseUrl}}/api/favorites?userId={{userId}}&placeId={{placeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "favorites"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "placeId",
+                  "value": "{{placeId}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Favorite saved', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.5 Get Favorite Places",
+          "request": {
+            "method": "GET",
+            "description": "Loads the favorite place cards for the current user.",
+            "url": {
+              "raw": "{{baseUrl}}/api/favorites/user/{{userId}}/places",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "favorites",
+                "user",
+                "{{userId}}",
+                "places"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Favorites loaded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.6 Replace First Stop",
+          "request": {
+            "method": "PUT",
+            "description": "Replaces one itinerary stop while keeping the same trip and day structure.\n\nSuccess checks:\n- HTTP 200\n- Response returns the itinerary\n- `tripId` remains the same",
+            "url": {
+              "raw": "{{baseUrl}}/api/trips/{{tripId}}/places/{{tripPlaceId}}/replace",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "trips",
+                "{{tripId}}",
+                "places",
+                "{{tripPlaceId}}",
+                "replace"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Trip place replaced', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.7 Get Updated Itinerary",
+          "request": {
+            "method": "GET",
+            "description": "Reloads the itinerary after replacement so you can confirm the stop changed.",
+            "url": {
+              "raw": "{{baseUrl}}/api/trips/{{tripId}}/itinerary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "trips",
+                "{{tripId}}",
+                "itinerary"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.8 Delete Favorite",
+          "request": {
+            "method": "DELETE",
+            "description": "Removes the saved place from favorites.",
+            "url": {
+              "raw": "{{baseUrl}}/api/favorites?userId={{userId}}&placeId={{placeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "favorites"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "placeId",
+                  "value": "{{placeId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.9 Confirm Favorites After Delete",
+          "request": {
+            "method": "GET",
+            "description": "Final check that favorites still load after deletion.",
+            "url": {
+              "raw": "{{baseUrl}}/api/favorites/user/{{userId}}/places",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "favorites",
+                "user",
+                "{{userId}}",
+                "places"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

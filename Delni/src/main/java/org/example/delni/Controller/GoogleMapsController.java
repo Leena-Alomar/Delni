@@ -1,25 +1,27 @@
 package org.example.delni.Controller;
 
-import org.example.delni.Model.Place;
+import lombok.RequiredArgsConstructor;
+import org.example.delni.DTO.Out.GoogleSyncResponse;
 import org.example.delni.Service.GoogleMapsService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/maps")
+@RequiredArgsConstructor
 public class GoogleMapsController {
 
-    @Autowired
-    private GoogleMapsService googleMapsService;
+    private final GoogleMapsService googleMapsService;
 
-    @GetMapping("/sync-places")
-    public List<Place> syncPlaces(
+    @PostMapping("/sync-places")
+    public ResponseEntity<?> syncPlaces(
             @RequestParam double lat,
             @RequestParam double lng,
-            @RequestParam String type) {
-
-        // This will call the API, save to DB, and return the saved objects
-        return googleMapsService.syncNearbyPlaces(lat, lng, type);
+            @RequestParam String type,
+            @RequestParam(required = false) Integer cityId) {
+        return ResponseEntity.status(200).body(googleMapsService.syncNearbyPlaces(lat, lng, type, cityId));
     }
 }

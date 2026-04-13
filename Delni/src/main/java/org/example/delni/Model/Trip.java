@@ -4,13 +4,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -57,7 +59,7 @@ public class Trip {
     @PositiveOrZero(message = "Total cost cannot be negative")
     private Double totalCostEstimate;
 
-    // Feature Flags - Matching ERD
+
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean includeTikTokTrending;
 
@@ -76,7 +78,7 @@ public class Trip {
     @Column(columnDefinition = "TEXT")
     private String aiItineraryLogic;
 
-    @Column(columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     // Relationships
@@ -91,4 +93,11 @@ public class Trip {
 
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL)
     private List<TripPlace> tripPlaces;
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 }

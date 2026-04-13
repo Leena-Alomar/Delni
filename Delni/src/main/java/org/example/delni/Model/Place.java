@@ -1,14 +1,18 @@
 package org.example.delni.Model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.Valid;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -26,10 +30,10 @@ public class Place {
     private String description;
 
     @Column(columnDefinition = "VARCHAR(50)")
-    private String category; // 'nature', 'history', 'cafe', etc.
+    private String category;
 
     @Column(columnDefinition = "VARCHAR(50)")
-    private String vibeTag; // 'historical', 'modern', 'nature'
+    private String vibeTag;
 
     @Column(columnDefinition = "DOUBLE NOT NULL")
     @NotNull(message = "Latitude is required")
@@ -43,6 +47,9 @@ public class Place {
 
     @Column(columnDefinition = "VARCHAR(255)")
     private String googleMapsUrl;
+
+    @Column(columnDefinition = "VARCHAR(100)")
+    private String googlePlaceId;
 
     private Double tiktokTrendScore;
 
@@ -64,16 +71,23 @@ public class Place {
     // Relationships
 
     @ManyToOne
-    @JsonIgnore
+    @NotNull(message = "City is required")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private City city;
 
-    @OneToMany(mappedBy = "place", cascade = CascadeType.ALL)
+    @Valid
+    @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OperatingHours> operatingHours;
 
-    @OneToMany(mappedBy = "place", cascade = CascadeType.ALL)
+    @Valid
+    @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PlaceMedia> mediaList;
 
     @OneToMany(mappedBy = "place")
     @JsonIgnore
     private List<TripPlace> tripPlaces;
+
+    @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Favorite> favorites;
 }

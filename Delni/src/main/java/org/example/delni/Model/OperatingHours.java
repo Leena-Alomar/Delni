@@ -2,12 +2,16 @@ package org.example.delni.Model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import java.time.LocalTime;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -18,7 +22,9 @@ public class OperatingHours {
     private Integer id;
 
     @Column(nullable = false)
-    private Integer dayOfWeek; // 0=Sunday...6=Saturday
+    @Min(value = 0, message = "dayOfWeek must be between 0 and 6")
+    @Max(value = 6, message = "dayOfWeek must be between 0 and 6")
+    private Integer dayOfWeek;
 
     private LocalTime openTime;
     private LocalTime closeTime;

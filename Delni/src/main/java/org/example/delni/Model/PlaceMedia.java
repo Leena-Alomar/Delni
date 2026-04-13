@@ -5,10 +5,12 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -33,6 +35,22 @@ public class PlaceMedia {
 
     @Column(columnDefinition = "VARCHAR(255)")
     private String caption;
+
+    @Column(columnDefinition = "VARCHAR(50)")
+    private String sourcePlatform;
+
+    @Column(columnDefinition = "VARCHAR(100)")
+    private String externalMediaId;
+
+    @Column(columnDefinition = "VARCHAR(100)")
+    private String creatorName;
+
+    @Column(columnDefinition = "VARCHAR(100)")
+    private String creatorHandle;
+
+    private Long viewCount;
+
+    private Long likeCount;
 
     // Relationships
 
